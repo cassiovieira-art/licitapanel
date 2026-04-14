@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LicitaPanel — Gestão de Licitações</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
     --bg: #0a0d12;
@@ -25,927 +25,225 @@
     --font: 'Syne', sans-serif;
     --mono: 'JetBrains Mono', monospace;
   }
-
-- { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-background: var(–bg);
-color: var(–text);
-font-family: var(–font);
-min-height: 100vh;
-overflow-x: hidden;
-}
-
-/* BG texture */
-body::before {
-content: ‘’;
-position: fixed;
-inset: 0;
-background:
-radial-gradient(ellipse 80% 50% at 10% 20%, rgba(0,229,160,0.04) 0%, transparent 60%),
-radial-gradient(ellipse 60% 40% at 90% 80%, rgba(0,153,255,0.04) 0%, transparent 60%);
-pointer-events: none;
-z-index: 0;
-}
-
-/* HEADER */
-header {
-position: sticky;
-top: 0;
-z-index: 100;
-background: rgba(10,13,18,0.92);
-backdrop-filter: blur(20px);
-border-bottom: 1px solid var(–border);
-padding: 0 24px;
-display: flex;
-align-items: center;
-justify-content: space-between;
-height: 60px;
-}
-
-.logo {
-display: flex;
-align-items: center;
-gap: 10px;
-font-weight: 800;
-font-size: 18px;
-letter-spacing: -0.5px;
-}
-
-.logo-icon {
-width: 32px;
-height: 32px;
-background: linear-gradient(135deg, var(–accent), var(–accent2));
-border-radius: 8px;
-display: flex;
-align-items: center;
-justify-content: center;
-font-size: 14px;
-}
-
-.logo span { color: var(–accent); }
-
-.header-right {
-display: flex;
-align-items: center;
-gap: 12px;
-}
-
-.notif-btn {
-position: relative;
-width: 36px;
-height: 36px;
-background: var(–surface);
-border: 1px solid var(–border);
-border-radius: 8px;
-display: flex;
-align-items: center;
-justify-content: center;
-cursor: pointer;
-font-size: 16px;
-transition: all 0.2s;
-}
-
-.notif-btn:hover { border-color: var(–accent); }
-
-.notif-badge {
-position: absolute;
-top: -4px;
-right: -4px;
-width: 16px;
-height: 16px;
-background: var(–danger);
-border-radius: 50%;
-font-size: 9px;
-display: flex;
-align-items: center;
-justify-content: center;
-font-family: var(–mono);
-color: white;
-font-weight: 600;
-border: 2px solid var(–bg);
-}
-
-.btn-new {
-display: flex;
-align-items: center;
-gap: 6px;
-padding: 8px 16px;
-background: var(–accent);
-color: #000;
-border: none;
-border-radius: 8px;
-font-family: var(–font);
-font-weight: 700;
-font-size: 13px;
-cursor: pointer;
-transition: all 0.2s;
-letter-spacing: 0.3px;
-}
-
-.btn-new:hover { background: #00ffb3; transform: translateY(-1px); }
-
-/* MAIN */
-main {
-position: relative;
-z-index: 1;
-padding: 24px;
-max-width: 1600px;
-margin: 0 auto;
-}
-
-/* STATS ROW */
-.stats-row {
-display: grid;
-grid-template-columns: repeat(5, 1fr);
-gap: 12px;
-margin-bottom: 24px;
-}
-
-.stat-card {
-background: var(–surface);
-border: 1px solid var(–border);
-border-radius: 12px;
-padding: 16px 20px;
-position: relative;
-overflow: hidden;
-transition: border-color 0.2s;
-}
-
-.stat-card:hover { border-color: var(–border2); }
-
-.stat-card::before {
-content: ‘’;
-position: absolute;
-top: 0; left: 0; right: 0;
-height: 2px;
-}
-
-.stat-card.total::before { background: var(–accent2); }
-.stat-card.andamento::before { background: var(–warn); }
-.stat-card.ganhei::before { background: var(–success); }
-.stat-card.perdi::before { background: var(–danger); }
-.stat-card.recurso::before { background: var(–accent3); }
-
-.stat-label {
-font-size: 11px;
-color: var(–text2);
-text-transform: uppercase;
-letter-spacing: 1px;
-margin-bottom: 8px;
-font-weight: 600;
-}
-
-.stat-value {
-font-size: 28px;
-font-weight: 800;
-font-family: var(–mono);
-line-height: 1;
-}
-
-.stat-card.total .stat-value { color: var(–accent2); }
-.stat-card.andamento .stat-value { color: var(–warn); }
-.stat-card.ganhei .stat-value { color: var(–success); }
-.stat-card.perdi .stat-value { color: var(–danger); }
-.stat-card.recurso .stat-value { color: var(–accent3); }
-
-/* FILTERS */
-.filters-bar {
-display: flex;
-gap: 10px;
-align-items: center;
-margin-bottom: 20px;
-flex-wrap: wrap;
-}
-
-.search-box {
-flex: 1;
-min-width: 200px;
-position: relative;
-}
-
-.search-box input {
-width: 100%;
-background: var(–surface);
-border: 1px solid var(–border);
-border-radius: 8px;
-padding: 9px 14px 9px 38px;
-color: var(–text);
-font-family: var(–font);
-font-size: 13px;
-outline: none;
-transition: border-color 0.2s;
-}
-
-.search-box input:focus { border-color: var(–accent); }
-.search-box input::placeholder { color: var(–text3); }
-
-.search-box .search-icon {
-position: absolute;
-left: 12px;
-top: 50%;
-transform: translateY(-50%);
-color: var(–text3);
-font-size: 14px;
-}
-
-.filter-select {
-background: var(–surface);
-border: 1px solid var(–border);
-border-radius: 8px;
-padding: 9px 14px;
-color: var(–text);
-font-family: var(–font);
-font-size: 13px;
-outline: none;
-cursor: pointer;
-transition: border-color 0.2s;
-}
-
-.filter-select:focus { border-color: var(–accent); }
-
-/* TABLE */
-.table-container {
-background: var(–surface);
-border: 1px solid var(–border);
-border-radius: 16px;
-overflow: hidden;
-}
-
-.table-header-row {
-display: flex;
-align-items: center;
-justify-content: space-between;
-padding: 16px 20px;
-border-bottom: 1px solid var(–border);
-}
-
-.table-title {
-font-size: 14px;
-font-weight: 700;
-color: var(–text2);
-text-transform: uppercase;
-letter-spacing: 1px;
-}
-
-.table-count {
-font-family: var(–mono);
-font-size: 12px;
-color: var(–text3);
-}
-
-.table-scroll {
-overflow-x: auto;
-}
-
-table {
-width: 100%;
-border-collapse: collapse;
-font-size: 13px;
-}
-
-thead th {
-background: var(–surface2);
-padding: 10px 14px;
-text-align: left;
-font-size: 10px;
-font-weight: 700;
-text-transform: uppercase;
-letter-spacing: 1.2px;
-color: var(–text3);
-white-space: nowrap;
-border-bottom: 1px solid var(–border);
-cursor: pointer;
-user-select: none;
-transition: color 0.2s;
-}
-
-thead th:hover { color: var(–text2); }
-thead th.sorted { color: var(–accent); }
-
-tbody tr {
-border-bottom: 1px solid var(–border);
-transition: background 0.15s;
-cursor: pointer;
-}
-
-tbody tr:last-child { border-bottom: none; }
-tbody tr:hover { background: var(–surface2); }
-
-tbody td {
-padding: 12px 14px;
-vertical-align: middle;
-white-space: nowrap;
-}
-
-.td-edital {
-font-family: var(–mono);
-font-size: 12px;
-font-weight: 600;
-color: var(–accent2);
-}
-
-.td-orgao {
-font-weight: 600;
-max-width: 200px;
-overflow: hidden;
-text-overflow: ellipsis;
-}
-
-.td-objeto {
-color: var(–text2);
-max-width: 220px;
-overflow: hidden;
-text-overflow: ellipsis;
-font-size: 12px;
-}
-
-.td-cidade {
-font-size: 12px;
-color: var(–text2);
-}
-
-.td-plataforma {
-font-family: var(–mono);
-font-size: 11px;
-padding: 3px 8px;
-border-radius: 4px;
-background: rgba(0,153,255,0.1);
-border: 1px solid rgba(0,153,255,0.2);
-color: var(–accent2);
-display: inline-block;
-}
-
-.td-valor {
-font-family: var(–mono);
-font-size: 12px;
-color: var(–text2);
-}
-
-.td-meu-valor {
-font-family: var(–mono);
-font-size: 12px;
-font-weight: 600;
-color: var(–text);
-}
-
-.td-margem.positiva { color: var(–success); }
-.td-margem.negativa { color: var(–danger); }
-.td-margem { font-family: var(–mono); font-size: 12px; }
-
-.rank-badge {
-display: inline-flex;
-align-items: center;
-justify-content: center;
-width: 28px;
-height: 28px;
-border-radius: 50%;
-font-family: var(–mono);
-font-weight: 700;
-font-size: 13px;
-}
-
-.rank-1 { background: rgba(0,229,160,0.15); color: var(–accent); border: 1px solid rgba(0,229,160,0.3); }
-.rank-2 { background: rgba(0,153,255,0.15); color: var(–accent2); border: 1px solid rgba(0,153,255,0.3); }
-.rank-3 { background: rgba(255,176,32,0.15); color: var(–warn); border: 1px solid rgba(255,176,32,0.3); }
-.rank-other { background: rgba(255,255,255,0.05); color: var(–text2); border: 1px solid var(–border); }
-
-.status-badge {
-display: inline-flex;
-align-items: center;
-gap: 5px;
-padding: 4px 10px;
-border-radius: 20px;
-font-size: 11px;
-font-weight: 700;
-letter-spacing: 0.3px;
-white-space: nowrap;
-}
-
-.status-badge::before {
-content: ‘’;
-width: 6px;
-height: 6px;
-border-radius: 50%;
-}
-
-.status-andamento { background: rgba(255,176,32,0.1); color: var(–warn); border: 1px solid rgba(255,176,32,0.25); }
-.status-andamento::before { background: var(–warn); box-shadow: 0 0 6px var(–warn); animation: pulse 1.5s infinite; }
-
-.status-homologacao { background: rgba(0,153,255,0.1); color: var(–accent2); border: 1px solid rgba(0,153,255,0.25); }
-.status-homologacao::before { background: var(–accent2); }
-
-.status-ganhei { background: rgba(0,229,160,0.1); color: var(–success); border: 1px solid rgba(0,229,160,0.25); }
-.status-ganhei::before { background: var(–success); }
-
-.status-perdi { background: rgba(255,68,68,0.1); color: var(–danger); border: 1px solid rgba(255,68,68,0.25); }
-.status-perdi::before { background: var(–danger); }
-
-.status-recurso { background: rgba(255,107,53,0.1); color: var(–accent3); border: 1px solid rgba(255,107,53,0.25); }
-.status-recurso::before { background: var(–accent3); }
-
-@keyframes pulse {
-0%, 100% { opacity: 1; }
-50% { opacity: 0.3; }
-}
-
-.prio-badge {
-display: inline-flex;
-align-items: center;
-gap: 4px;
-font-size: 11px;
-font-weight: 700;
-padding: 3px 8px;
-border-radius: 4px;
-}
-
-.prio-alta { background: rgba(255,68,68,0.15); color: var(–danger); }
-.prio-media { background: rgba(255,176,32,0.15); color: var(–warn); }
-.prio-baixa { background: rgba(0,229,160,0.1); color: var(–success); }
-
-.fase-tag {
-font-size: 11px;
-color: var(–text2);
-font-family: var(–mono);
-}
-
-.td-actions {
-display: flex;
-gap: 6px;
-align-items: center;
-}
-
-.action-btn {
-width: 28px;
-height: 28px;
-border-radius: 6px;
-border: 1px solid var(–border);
-background: transparent;
-color: var(–text3);
-cursor: pointer;
-display: flex;
-align-items: center;
-justify-content: center;
-font-size: 13px;
-transition: all 0.2s;
-}
-
-.action-btn:hover { border-color: var(–accent); color: var(–accent); background: rgba(0,229,160,0.08); }
-.action-btn.danger:hover { border-color: var(–danger); color: var(–danger); background: rgba(255,68,68,0.08); }
-
-.td-data { font-family: var(–mono); font-size: 11px; color: var(–text3); }
-
-.prazo-ok { color: var(–text3); font-family: var(–mono); font-size: 11px; }
-.prazo-warn { color: var(–warn); font-family: var(–mono); font-size: 11px; font-weight: 600; }
-.prazo-danger { color: var(–danger); font-family: var(–mono); font-size: 11px; font-weight: 700; }
-
-/* MODAL */
-.modal-overlay {
-position: fixed;
-inset: 0;
-background: rgba(0,0,0,0.7);
-backdrop-filter: blur(8px);
-z-index: 1000;
-display: none;
-align-items: center;
-justify-content: center;
-padding: 20px;
-}
-
-.modal-overlay.open { display: flex; }
-
-.modal {
-background: var(–surface);
-border: 1px solid var(–border2);
-border-radius: 20px;
-width: 100%;
-max-width: 680px;
-max-height: 90vh;
-overflow-y: auto;
-animation: modalIn 0.25s ease;
-}
-
-@keyframes modalIn {
-from { opacity: 0; transform: translateY(20px) scale(0.97); }
-to { opacity: 1; transform: none; }
-}
-
-.modal-header {
-padding: 24px 28px 20px;
-border-bottom: 1px solid var(–border);
-display: flex;
-align-items: center;
-justify-content: space-between;
-}
-
-.modal-title { font-size: 18px; font-weight: 800; }
-.modal-subtitle { font-size: 12px; color: var(–text2); margin-top: 2px; }
-
-.modal-close {
-width: 32px; height: 32px;
-background: var(–surface2);
-border: 1px solid var(–border);
-border-radius: 8px;
-color: var(–text2);
-cursor: pointer;
-display: flex; align-items: center; justify-content: center;
-font-size: 16px;
-transition: all 0.2s;
-}
-
-.modal-close:hover { border-color: var(–danger); color: var(–danger); }
-
-.modal-body { padding: 24px 28px; }
-.modal-footer { padding: 20px 28px; border-top: 1px solid var(–border); display: flex; gap: 10px; justify-content: flex-end; }
-
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.form-grid .full { grid-column: 1 / -1; }
-
-.form-group { display: flex; flex-direction: column; gap: 6px; }
-
-.form-label {
-font-size: 11px;
-font-weight: 700;
-text-transform: uppercase;
-letter-spacing: 0.8px;
-color: var(–text2);
-}
-
-.form-input, .form-select, .form-textarea {
-background: var(–surface2);
-border: 1px solid var(–border);
-border-radius: 8px;
-padding: 10px 14px;
-color: var(–text);
-font-family: var(–font);
-font-size: 13px;
-outline: none;
-transition: border-color 0.2s;
-width: 100%;
-}
-
-.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(–accent); }
-.form-input::placeholder, .form-textarea::placeholder { color: var(–text3); }
-
-.form-textarea { resize: vertical; min-height: 80px; }
-
-.btn-cancel {
-padding: 10px 20px;
-background: transparent;
-border: 1px solid var(–border);
-border-radius: 8px;
-color: var(–text2);
-font-family: var(–font);
-font-weight: 600;
-font-size: 13px;
-cursor: pointer;
-transition: all 0.2s;
-}
-
-.btn-cancel:hover { border-color: var(–text2); color: var(–text); }
-
-.btn-save {
-padding: 10px 24px;
-background: var(–accent);
-border: none;
-border-radius: 8px;
-color: #000;
-font-family: var(–font);
-font-weight: 700;
-font-size: 13px;
-cursor: pointer;
-transition: all 0.2s;
-}
-
-.btn-save:hover { background: #00ffb3; }
-
-/* DETAIL PANEL */
-.detail-overlay {
-position: fixed;
-inset: 0;
-background: rgba(0,0,0,0.6);
-backdrop-filter: blur(6px);
-z-index: 900;
-display: none;
-}
-
-.detail-overlay.open { display: block; }
-
-.detail-panel {
-position: fixed;
-top: 0;
-right: -480px;
-width: 480px;
-height: 100vh;
-background: var(–surface);
-border-left: 1px solid var(–border2);
-z-index: 901;
-overflow-y: auto;
-transition: right 0.3s cubic-bezier(0.4,0,0.2,1);
-padding: 28px;
-}
-
-.detail-panel.open { right: 0; }
-
-.detail-close {
-position: absolute;
-top: 20px; right: 20px;
-width: 32px; height: 32px;
-background: var(–surface2);
-border: 1px solid var(–border);
-border-radius: 8px;
-color: var(–text2);
-cursor: pointer;
-display: flex; align-items: center; justify-content: center;
-font-size: 16px;
-}
-
-.detail-close:hover { border-color: var(–danger); color: var(–danger); }
-
-.detail-edital {
-font-family: var(–mono);
-font-size: 12px;
-color: var(–accent2);
-margin-bottom: 6px;
-}
-
-.detail-orgao {
-font-size: 20px;
-font-weight: 800;
-margin-bottom: 4px;
-line-height: 1.2;
-}
-
-.detail-objeto {
-font-size: 13px;
-color: var(–text2);
-margin-bottom: 20px;
-line-height: 1.5;
-}
-
-.detail-section-title {
-font-size: 10px;
-font-weight: 700;
-text-transform: uppercase;
-letter-spacing: 1.2px;
-color: var(–text3);
-margin: 20px 0 12px;
-padding-bottom: 8px;
-border-bottom: 1px solid var(–border);
-}
-
-.detail-grid {
-display: grid;
-grid-template-columns: 1fr 1fr;
-gap: 12px;
-}
-
-.detail-item { }
-
-.detail-item-label {
-font-size: 10px;
-color: var(–text3);
-text-transform: uppercase;
-letter-spacing: 0.8px;
-margin-bottom: 3px;
-font-weight: 600;
-}
-
-.detail-item-value {
-font-size: 14px;
-font-weight: 600;
-font-family: var(–mono);
-}
-
-/* CONCORRENTES */
-.concorrente-row {
-display: flex;
-align-items: center;
-gap: 12px;
-padding: 10px 0;
-border-bottom: 1px solid var(–border);
-}
-
-.concorrente-row:last-child { border-bottom: none; }
-
-.conc-rank {
-width: 28px;
-height: 28px;
-border-radius: 50%;
-display: flex;
-align-items: center;
-justify-content: center;
-font-family: var(–mono);
-font-weight: 700;
-font-size: 12px;
-flex-shrink: 0;
-}
-
-.conc-info { flex: 1; }
-.conc-nome { font-size: 13px; font-weight: 600; }
-.conc-status { font-size: 11px; color: var(–text3); margin-top: 2px; }
-.conc-valor { font-family: var(–mono); font-size: 13px; font-weight: 600; }
-.conc-eu { border-left: 2px solid var(–accent); padding-left: 10px; }
-
-/* MENSAGENS PREGOEIRO */
-.msg-item {
-padding: 12px 0;
-border-bottom: 1px solid var(–border);
-}
-
-.msg-item:last-child { border-bottom: none; }
-
-.msg-time {
-font-family: var(–mono);
-font-size: 10px;
-color: var(–text3);
-margin-bottom: 4px;
-}
-
-.msg-text {
-font-size: 13px;
-color: var(–text2);
-line-height: 1.5;
-}
-
-/* NOTIFICAÇÕES */
-.notif-panel {
-position: fixed;
-top: 68px;
-right: 24px;
-width: 340px;
-background: var(–surface);
-border: 1px solid var(–border2);
-border-radius: 16px;
-z-index: 500;
-overflow: hidden;
-display: none;
-box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-animation: notifIn 0.2s ease;
-}
-
-@keyframes notifIn {
-from { opacity: 0; transform: translateY(-10px); }
-to { opacity: 1; transform: none; }
-}
-
-.notif-panel.open { display: block; }
-
-.notif-panel-header {
-padding: 16px 20px;
-border-bottom: 1px solid var(–border);
-display: flex;
-align-items: center;
-justify-content: space-between;
-font-size: 13px;
-font-weight: 700;
-}
-
-.notif-item {
-padding: 14px 20px;
-border-bottom: 1px solid var(–border);
-cursor: pointer;
-transition: background 0.15s;
-}
-
-.notif-item:last-child { border-bottom: none; }
-.notif-item:hover { background: var(–surface2); }
-
-.notif-item-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
-.notif-item-desc { font-size: 12px; color: var(–text2); }
-.notif-item-time { font-size: 11px; color: var(–text3); margin-top: 4px; font-family: var(–mono); }
-
-.notif-dot {
-width: 8px; height: 8px;
-border-radius: 50%;
-background: var(–accent);
-flex-shrink: 0;
-margin-top: 3px;
-}
-
-.notif-item-row { display: flex; gap: 10px; }
-
-/* EMPTY STATE */
-.empty-state {
-text-align: center;
-padding: 60px 20px;
-color: var(–text3);
-}
-
-.empty-icon { font-size: 48px; margin-bottom: 16px; }
-.empty-title { font-size: 16px; font-weight: 700; color: var(–text2); margin-bottom: 8px; }
-.empty-desc { font-size: 13px; line-height: 1.6; }
-
-/* SECTION DIVIDER */
-.section-divider {
-display: flex;
-align-items: center;
-gap: 12px;
-margin: 8px 0 16px;
-}
-
-.section-divider-label {
-font-size: 11px;
-font-weight: 700;
-color: var(–accent3);
-text-transform: uppercase;
-letter-spacing: 1px;
-white-space: nowrap;
-}
-
-.section-divider-line {
-flex: 1;
-height: 1px;
-background: linear-gradient(to right, rgba(255,107,53,0.3), transparent);
-}
-
-/* RESPONSIVE */
-@media (max-width: 900px) {
-.stats-row { grid-template-columns: repeat(3, 1fr); }
-main { padding: 16px; }
-.detail-panel { width: 100%; right: -100%; }
-}
-
-@media (max-width: 600px) {
-.stats-row { grid-template-columns: repeat(2, 1fr); }
-.form-grid { grid-template-columns: 1fr; }
-}
-
-/* URGÊNCIA HIGHLIGHT */
-tbody tr.urgente { background: rgba(255,68,68,0.03); }
-tbody tr.urgente:hover { background: rgba(255,68,68,0.07); }
-
-.btn-add-conc {
-width: 100%;
-padding: 8px;
-background: transparent;
-border: 1px dashed var(–border2);
-border-radius: 8px;
-color: var(–text3);
-font-family: var(–font);
-font-size: 12px;
-cursor: pointer;
-transition: all 0.2s;
-margin-top: 8px;
-}
-
-.btn-add-conc:hover { border-color: var(–accent); color: var(–accent); }
-
-.btn-add-msg {
-width: 100%;
-padding: 8px;
-background: transparent;
-border: 1px dashed var(–border2);
-border-radius: 8px;
-color: var(–text3);
-font-family: var(–font);
-font-size: 12px;
-cursor: pointer;
-transition: all 0.2s;
-margin-top: 8px;
-}
-
-.btn-add-msg:hover { border-color: var(–accent2); color: var(–accent2); }
-
-.detail-edit-btn {
-width: 100%;
-margin-top: 20px;
-padding: 10px;
-background: transparent;
-border: 1px solid var(–border2);
-border-radius: 10px;
-color: var(–text2);
-font-family: var(–font);
-font-size: 13px;
-font-weight: 600;
-cursor: pointer;
-transition: all 0.2s;
-}
-
-.detail-edit-btn:hover { border-color: var(–accent); color: var(–accent); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; overflow-x: hidden; }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background: radial-gradient(ellipse 80% 50% at 10% 20%, rgba(0,229,160,0.04) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 90% 80%, rgba(0,153,255,0.04) 0%, transparent 60%);
+    pointer-events: none; z-index: 0;
+  }
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,13,18,0.92); backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 60px;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; letter-spacing: -0.5px; }
+  .logo-icon { width: 32px; height: 32px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .logo span { color: var(--accent); }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .sync-indicator { font-size: 11px; font-family: var(--mono); color: var(--text3); display: flex; align-items: center; gap: 5px; }
+  .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
+  .sync-dot.syncing { animation: pulse 1s infinite; background: var(--warn); }
+  .sync-dot.error { background: var(--danger); }
+  .notif-btn { position: relative; width: 36px; height: 36px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; transition: all 0.2s; }
+  .notif-btn:hover { border-color: var(--accent); }
+  .notif-badge { position: absolute; top: -4px; right: -4px; width: 16px; height: 16px; background: var(--danger); border-radius: 50%; font-size: 9px; display: flex; align-items: center; justify-content: center; font-family: var(--mono); color: white; font-weight: 600; border: 2px solid var(--bg); }
+  .btn-new { display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--accent); color: #000; border: none; border-radius: 8px; font-family: var(--font); font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s; letter-spacing: 0.3px; }
+  .btn-new:hover { background: #00ffb3; transform: translateY(-1px); }
+  main { position: relative; z-index: 1; padding: 24px; max-width: 1600px; margin: 0 auto; }
+  .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; position: relative; overflow: hidden; transition: border-color 0.2s; }
+  .stat-card:hover { border-color: var(--border2); }
+  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+  .stat-card.total::before { background: var(--accent2); }
+  .stat-card.andamento::before { background: var(--warn); }
+  .stat-card.ganhei::before { background: var(--success); }
+  .stat-card.perdi::before { background: var(--danger); }
+  .stat-card.recurso::before { background: var(--accent3); }
+  .stat-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 600; }
+  .stat-value { font-size: 28px; font-weight: 800; font-family: var(--mono); line-height: 1; }
+  .stat-card.total .stat-value { color: var(--accent2); }
+  .stat-card.andamento .stat-value { color: var(--warn); }
+  .stat-card.ganhei .stat-value { color: var(--success); }
+  .stat-card.perdi .stat-value { color: var(--danger); }
+  .stat-card.recurso .stat-value { color: var(--accent3); }
+  .filters-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+  .search-box { flex: 1; min-width: 200px; position: relative; }
+  .search-box input { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px 9px 38px; color: var(--text); font-family: var(--font); font-size: 13px; outline: none; transition: border-color 0.2s; }
+  .search-box input:focus { border-color: var(--accent); }
+  .search-box input::placeholder { color: var(--text3); }
+  .search-box .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 14px; }
+  .filter-select { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px; color: var(--text); font-family: var(--font); font-size: 13px; outline: none; cursor: pointer; transition: border-color 0.2s; }
+  .filter-select:focus { border-color: var(--accent); }
+  .table-container { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+  .table-header-row { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  .table-title { font-size: 14px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; }
+  .table-count { font-family: var(--mono); font-size: 12px; color: var(--text3); }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { background: var(--surface2); padding: 10px 14px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text3); white-space: nowrap; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; transition: color 0.2s; }
+  thead th:hover { color: var(--text2); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; cursor: pointer; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody td { padding: 12px 14px; vertical-align: middle; white-space: nowrap; }
+  .td-edital { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--accent2); }
+  .td-orgao { font-weight: 600; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+  .td-objeto { color: var(--text2); max-width: 220px; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
+  .td-cidade { font-size: 12px; color: var(--text2); }
+  .td-plataforma { font-family: var(--mono); font-size: 11px; padding: 3px 8px; border-radius: 4px; background: rgba(0,153,255,0.1); border: 1px solid rgba(0,153,255,0.2); color: var(--accent2); display: inline-block; }
+  .td-valor { font-family: var(--mono); font-size: 12px; color: var(--text2); }
+  .td-meu-valor { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--text); }
+  .td-margem.positiva { color: var(--success); }
+  .td-margem.negativa { color: var(--danger); }
+  .td-margem { font-family: var(--mono); font-size: 12px; }
+  .rank-badge { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; font-family: var(--mono); font-weight: 700; font-size: 13px; }
+  .rank-1 { background: rgba(0,229,160,0.15); color: var(--accent); border: 1px solid rgba(0,229,160,0.3); }
+  .rank-2 { background: rgba(0,153,255,0.15); color: var(--accent2); border: 1px solid rgba(0,153,255,0.3); }
+  .rank-3 { background: rgba(255,176,32,0.15); color: var(--warn); border: 1px solid rgba(255,176,32,0.3); }
+  .rank-other { background: rgba(255,255,255,0.05); color: var(--text2); border: 1px solid var(--border); }
+  .status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.3px; white-space: nowrap; }
+  .status-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
+  .status-andamento { background: rgba(255,176,32,0.1); color: var(--warn); border: 1px solid rgba(255,176,32,0.25); }
+  .status-andamento::before { background: var(--warn); box-shadow: 0 0 6px var(--warn); animation: pulse 1.5s infinite; }
+  .status-homologacao { background: rgba(0,153,255,0.1); color: var(--accent2); border: 1px solid rgba(0,153,255,0.25); }
+  .status-homologacao::before { background: var(--accent2); }
+  .status-ganhei { background: rgba(0,229,160,0.1); color: var(--success); border: 1px solid rgba(0,229,160,0.25); }
+  .status-ganhei::before { background: var(--success); }
+  .status-perdi { background: rgba(255,68,68,0.1); color: var(--danger); border: 1px solid rgba(255,68,68,0.25); }
+  .status-perdi::before { background: var(--danger); }
+  .status-recurso { background: rgba(255,107,53,0.1); color: var(--accent3); border: 1px solid rgba(255,107,53,0.25); }
+  .status-recurso::before { background: var(--accent3); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .prio-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; }
+  .prio-alta { background: rgba(255,68,68,0.15); color: var(--danger); }
+  .prio-media { background: rgba(255,176,32,0.15); color: var(--warn); }
+  .prio-baixa { background: rgba(0,229,160,0.1); color: var(--success); }
+  .fase-tag { font-size: 11px; color: var(--text2); font-family: var(--mono); }
+  .td-actions { display: flex; gap: 6px; align-items: center; }
+  .action-btn { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text3); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; transition: all 0.2s; }
+  .action-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,229,160,0.08); }
+  .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); background: rgba(255,68,68,0.08); }
+  .td-data { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+  .prazo-ok { color: var(--text3); font-family: var(--mono); font-size: 11px; }
+  .prazo-warn { color: var(--warn); font-family: var(--mono); font-size: 11px; font-weight: 600; }
+  .prazo-danger { color: var(--danger); font-family: var(--mono); font-size: 11px; font-weight: 700; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border2); border-radius: 20px; width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto; animation: modalIn 0.25s ease; }
+  @keyframes modalIn { from { opacity: 0; transform: translateY(20px) scale(0.97); } to { opacity: 1; transform: none; } }
+  .modal-header { padding: 24px 28px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .modal-title { font-size: 18px; font-weight: 800; }
+  .modal-subtitle { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .modal-close { width: 32px; height: 32px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text2); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.2s; }
+  .modal-close:hover { border-color: var(--danger); color: var(--danger); }
+  .modal-body { padding: 24px 28px; }
+  .modal-footer { padding: 20px 28px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-grid .full { grid-column: 1 / -1; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text2); }
+  .form-input, .form-select, .form-textarea { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: var(--font); font-size: 13px; outline: none; transition: border-color 0.2s; width: 100%; }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+  .form-input::placeholder, .form-textarea::placeholder { color: var(--text3); }
+  .form-textarea { resize: vertical; min-height: 80px; }
+  .btn-cancel { padding: 10px 20px; background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--text2); font-family: var(--font); font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+  .btn-cancel:hover { border-color: var(--text2); color: var(--text); }
+  .btn-save { padding: 10px 24px; background: var(--accent); border: none; border-radius: 8px; color: #000; font-family: var(--font); font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+  .btn-save:hover { background: #00ffb3; }
+  .detail-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(6px); z-index: 900; display: none; }
+  .detail-overlay.open { display: block; }
+  .detail-panel { position: fixed; top: 0; right: -480px; width: 480px; height: 100vh; background: var(--surface); border-left: 1px solid var(--border2); z-index: 901; overflow-y: auto; transition: right 0.3s cubic-bezier(0.4,0,0.2,1); padding: 28px; }
+  .detail-panel.open { right: 0; }
+  .detail-close { position: absolute; top: 20px; right: 20px; width: 32px; height: 32px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text2); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .detail-close:hover { border-color: var(--danger); color: var(--danger); }
+  .detail-edital { font-family: var(--mono); font-size: 12px; color: var(--accent2); margin-bottom: 6px; }
+  .detail-orgao { font-size: 20px; font-weight: 800; margin-bottom: 4px; line-height: 1.2; }
+  .detail-objeto { font-size: 13px; color: var(--text2); margin-bottom: 20px; line-height: 1.5; }
+  .detail-section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text3); margin: 20px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .detail-item-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 3px; font-weight: 600; }
+  .detail-item-value { font-size: 14px; font-weight: 600; font-family: var(--mono); }
+  .concorrente-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .concorrente-row:last-child { border-bottom: none; }
+  .conc-rank { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-weight: 700; font-size: 12px; flex-shrink: 0; }
+  .conc-info { flex: 1; }
+  .conc-nome { font-size: 13px; font-weight: 600; }
+  .conc-status { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .conc-valor { font-family: var(--mono); font-size: 13px; font-weight: 600; }
+  .conc-eu { border-left: 2px solid var(--accent); padding-left: 10px; }
+  .msg-item { padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .msg-item:last-child { border-bottom: none; }
+  .msg-time { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-bottom: 4px; }
+  .msg-text { font-size: 13px; color: var(--text2); line-height: 1.5; }
+  .notif-panel { position: fixed; top: 68px; right: 24px; width: 340px; background: var(--surface); border: 1px solid var(--border2); border-radius: 16px; z-index: 500; overflow: hidden; display: none; box-shadow: 0 20px 60px rgba(0,0,0,0.4); animation: notifIn 0.2s ease; }
+  @keyframes notifIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+  .notif-panel.open { display: block; }
+  .notif-panel-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 700; }
+  .notif-item { padding: 14px 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
+  .notif-item:last-child { border-bottom: none; }
+  .notif-item:hover { background: var(--surface2); }
+  .notif-item-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .notif-item-desc { font-size: 12px; color: var(--text2); }
+  .notif-item-time { font-size: 11px; color: var(--text3); margin-top: 4px; font-family: var(--mono); }
+  .notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-top: 3px; }
+  .notif-item-row { display: flex; gap: 10px; }
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-title { font-size: 16px; font-weight: 700; color: var(--text2); margin-bottom: 8px; }
+  .empty-desc { font-size: 13px; line-height: 1.6; }
+  tbody tr.urgente { background: rgba(255,68,68,0.03); }
+  tbody tr.urgente:hover { background: rgba(255,68,68,0.07); }
+  .btn-add-conc, .btn-add-msg { width: 100%; padding: 8px; background: transparent; border: 1px dashed var(--border2); border-radius: 8px; color: var(--text3); font-family: var(--font); font-size: 12px; cursor: pointer; transition: all 0.2s; margin-top: 8px; }
+  .btn-add-conc:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-add-msg:hover { border-color: var(--accent2); color: var(--accent2); }
+  .detail-edit-btn { width: 100%; margin-top: 20px; padding: 10px; background: transparent; border: 1px solid var(--border2); border-radius: 10px; color: var(--text2); font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .detail-edit-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .loading-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+  .loading-spinner { width: 40px; height: 40px; border: 3px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 14px; color: var(--text2); font-family: var(--mono); }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--surface); border: 1px solid var(--border2); border-radius: 10px; padding: 12px 20px; font-size: 13px; font-weight: 600; z-index: 3000; transition: transform 0.3s; white-space: nowrap; box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: var(--success); color: var(--success); }
+  .toast.error { border-color: var(--danger); color: var(--danger); }
+  @media (max-width: 900px) { .stats-row { grid-template-columns: repeat(3, 1fr); } main { padding: 16px; } .detail-panel { width: 100%; right: -100%; } .sync-indicator span { display: none; } }
+  @media (max-width: 600px) { .stats-row { grid-template-columns: repeat(2, 1fr); } .form-grid { grid-template-columns: 1fr; } }
 </style>
-
 </head>
 <body>
 
-<!-- HEADER -->
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Conectando ao banco de dados...</div>
+</div>
 
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- HEADER -->
 <header>
   <div class="logo">
     <div class="logo-icon">⚡</div>
     Licita<span>Panel</span>
   </div>
   <div class="header-right">
+    <div class="sync-indicator" id="syncIndicator">
+      <div class="sync-dot" id="syncDot"></div>
+      <span id="syncText">Conectado</span>
+    </div>
     <div class="notif-btn" onclick="toggleNotif()">
       🔔
-      <div class="notif-badge" id="notifBadge">3</div>
+      <div class="notif-badge" id="notifBadge" style="display:none">0</div>
     </div>
     <button class="btn-new" onclick="openModal()">+ Nova Licitação</button>
   </div>
 </header>
 
 <!-- NOTIFICAÇÕES -->
-
 <div class="notif-panel" id="notifPanel">
   <div class="notif-panel-header">
     <span>Notificações</span>
@@ -955,37 +253,24 @@ transition: all 0.2s;
 </div>
 
 <main>
-  <!-- STATS -->
   <div class="stats-row">
-    <div class="stat-card total">
-      <div class="stat-label">Total</div>
-      <div class="stat-value" id="statTotal">0</div>
-    </div>
-    <div class="stat-card andamento">
-      <div class="stat-label">Em Andamento</div>
-      <div class="stat-value" id="statAndamento">0</div>
-    </div>
-    <div class="stat-card ganhei">
-      <div class="stat-label">Ganhei</div>
-      <div class="stat-value" id="statGanhei">0</div>
-    </div>
-    <div class="stat-card perdi">
-      <div class="stat-label">Perdi</div>
-      <div class="stat-value" id="statPerdi">0</div>
-    </div>
-    <div class="stat-card recurso">
-      <div class="stat-label">Recurso</div>
-      <div class="stat-value" id="statRecurso">0</div>
-    </div>
+    <div class="stat-card total"><div class="stat-label">Total</div><div class="stat-value" id="statTotal">—</div></div>
+    <div class="stat-card andamento"><div class="stat-label">Em Andamento</div><div class="stat-value" id="statAndamento">—</div></div>
+    <div class="stat-card ganhei"><div class="stat-label">Ganhei</div><div class="stat-value" id="statGanhei">—</div></div>
+    <div class="stat-card perdi"><div class="stat-label">Perdi</div><div class="stat-value" id="statPerdi">—</div></div>
+    <div class="stat-card recurso"><div class="stat-label">Recurso</div><div class="stat-value" id="statRecurso">—</div></div>
   </div>
-
-  <!-- FILTERS -->
 
   <div class="filters-bar">
     <div class="search-box">
       <span class="search-icon">🔍</span>
       <input type="text" id="searchInput" placeholder="Buscar por edital, órgão, cidade..." oninput="renderTable()">
     </div>
+    <select class="filter-select" id="filterEmpresa" onchange="renderTable()">
+      <option value="">Ambas as empresas</option>
+      <option value="BIOLIMP APOIO">BIOLIMP APOIO</option>
+      <option value="BIOLIMP CONSERVA">BIOLIMP CONSERVA</option>
+    </select>
     <select class="filter-select" id="filterStatus" onchange="renderTable()">
       <option value="">Todos os status</option>
       <option value="andamento">Em Andamento</option>
@@ -1010,18 +295,17 @@ transition: all 0.2s;
     </select>
   </div>
 
-  <!-- TABLE -->
-
   <div class="table-container">
     <div class="table-header-row">
       <div class="table-title">Licitações</div>
-      <div class="table-count" id="tableCount">0 registros</div>
+      <div class="table-count" id="tableCount">carregando...</div>
     </div>
     <div class="table-scroll">
       <table>
         <thead>
           <tr>
             <th onclick="sortBy('prio')">PRIO</th>
+            <th onclick="sortBy('empresa')">EMPRESA</th>
             <th onclick="sortBy('edital')">EDITAL</th>
             <th onclick="sortBy('orgao')">ÓRGÃO</th>
             <th onclick="sortBy('cidade')">CIDADE</th>
@@ -1029,11 +313,11 @@ transition: all 0.2s;
             <th>PLATAFORMA</th>
             <th onclick="sortBy('fase')">FASE</th>
             <th onclick="sortBy('status')">STATUS</th>
-            <th onclick="sortBy('valorOrgao')">VL. ÓRGÃO</th>
-            <th onclick="sortBy('meuValor')">MEU LANCE</th>
-            <th onclick="sortBy('margem')">MARGEM</th>
+            <th onclick="sortBy('valor_orgao')">VL. ÓRGÃO</th>
+            <th onclick="sortBy('meu_valor')">MEU LANCE</th>
+            <th>MARGEM</th>
             <th onclick="sortBy('rank')">POS.</th>
-            <th onclick="sortBy('data')">DATA SESSÃO</th>
+            <th onclick="sortBy('data_sessao')">DATA SESSÃO</th>
             <th>PRAZO REC.</th>
             <th>AÇÕES</th>
           </tr>
@@ -1049,8 +333,7 @@ transition: all 0.2s;
   </div>
 </main>
 
-<!-- MODAL NOVA/EDITAR LICITAÇÃO -->
-
+<!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
   <div class="modal">
     <div class="modal-header">
@@ -1062,95 +345,31 @@ transition: all 0.2s;
     </div>
     <div class="modal-body">
       <div class="form-grid">
-        <div class="form-group">
-          <label class="form-label">Nº do Edital / Processo</label>
-          <input class="form-input" id="f_edital" placeholder="Ex: 001/2025" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Plataforma</label>
-          <select class="form-select" id="f_plataforma">
-            <option>ComprasNet</option>
-            <option>BLL</option>
-            <option>Compras Públicas</option>
-            <option>Licitanet</option>
-            <option>Outro</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Órgão / Entidade</label>
-          <input class="form-input" id="f_orgao" placeholder="Ex: Prefeitura Municipal de..." />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Cidade / UF</label>
-          <input class="form-input" id="f_cidade" placeholder="Ex: Goiânia - GO" />
-        </div>
-        <div class="form-group full">
-          <label class="form-label">Objeto (o que está sendo licitado)</label>
-          <input class="form-input" id="f_objeto" placeholder="Descrição do objeto da licitação" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Valor Orçado pelo Órgão (R$)</label>
-          <input class="form-input" id="f_valorOrgao" type="number" placeholder="0,00" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Meu Valor de Lance (R$)</label>
-          <input class="form-input" id="f_meuValor" type="number" placeholder="0,00" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Fase Atual</label>
-          <select class="form-select" id="f_fase">
-            <option>Proposta</option>
-            <option>Lances</option>
-            <option>Recursos</option>
-            <option>Homologação</option>
-            <option>Encerrado</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Status</label>
-          <select class="form-select" id="f_status">
-            <option value="andamento">Em Andamento</option>
-            <option value="homologacao">Aguardando Homologação</option>
-            <option value="ganhei">Ganhei</option>
-            <option value="perdi">Perdi</option>
-            <option value="recurso">Recurso</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Minha Posição (Ranking)</label>
-          <input class="form-input" id="f_rank" type="number" placeholder="Ex: 1" min="1" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Total de Participantes</label>
-          <input class="form-input" id="f_totalPartic" type="number" placeholder="Ex: 10" min="1" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Data da Sessão</label>
-          <input class="form-input" id="f_data" type="date" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Prazo de Recurso (dias restantes)</label>
-          <input class="form-input" id="f_prazoRecurso" type="number" placeholder="Ex: 3" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Prioridade</label>
-          <select class="form-select" id="f_prio">
-            <option value="alta">🔴 Alta</option>
-            <option value="media" selected>🟡 Média</option>
-            <option value="baixa">🟢 Baixa</option>
-          </select>
-        </div>
+        <div class="form-group"><label class="form-label">Nº do Edital / Processo</label><input class="form-input" id="f_edital" placeholder="Ex: 001/2025" /></div>
+        <div class="form-group"><label class="form-label">Empresa Participante</label><select class="form-select" id="f_empresa"><option value="BIOLIMP APOIO">BIOLIMP APOIO</option><option value="BIOLIMP CONSERVA">BIOLIMP CONSERVA</option></select></div>
+        <div class="form-group"><label class="form-label">Plataforma</label><select class="form-select" id="f_plataforma"><option>ComprasNet</option><option>BLL</option><option>Compras Públicas</option><option>Licitanet</option><option>Outro</option></select></div>
+        <div class="form-group"><label class="form-label">Órgão / Entidade</label><input class="form-input" id="f_orgao" placeholder="Ex: Prefeitura Municipal de..." /></div>
+        <div class="form-group"><label class="form-label">Cidade / UF</label><input class="form-input" id="f_cidade" placeholder="Ex: Goiânia - GO" /></div>
+        <div class="form-group full"><label class="form-label">Objeto</label><input class="form-input" id="f_objeto" placeholder="Descrição do objeto da licitação" /></div>
+        <div class="form-group"><label class="form-label">Valor Orçado pelo Órgão (R$)</label><input class="form-input" id="f_valorOrgao" type="number" placeholder="0,00" /></div>
+        <div class="form-group"><label class="form-label">Meu Valor de Lance (R$)</label><input class="form-input" id="f_meuValor" type="number" placeholder="0,00" /></div>
+        <div class="form-group"><label class="form-label">Fase Atual</label><select class="form-select" id="f_fase"><option>Aguardando Abertura</option><option>Seleção de Fornecedores</option><option>Recurso</option><option>Homologação</option></select></div>
+        <div class="form-group"><label class="form-label">Status</label><select class="form-select" id="f_status"><option value="andamento">Em Andamento</option><option value="homologacao">Aguardando Homologação</option><option value="ganhei">Ganhei</option><option value="perdi">Perdi</option><option value="recurso">Recurso</option></select></div>
+        <div class="form-group"><label class="form-label">Minha Posição (Ranking)</label><input class="form-input" id="f_rank" type="number" placeholder="Ex: 1" min="1" /></div>
+        <div class="form-group"><label class="form-label">Total de Participantes</label><input class="form-input" id="f_totalPartic" type="number" placeholder="Ex: 10" min="1" /></div>
+        <div class="form-group"><label class="form-label">Data da Sessão</label><input class="form-input" id="f_data" type="date" /></div>
+        <div class="form-group"><label class="form-label">Prazo de Recurso (dias restantes)</label><input class="form-input" id="f_prazoRecurso" type="number" placeholder="Ex: 3" /></div>
+        <div class="form-group"><label class="form-label">Prioridade</label><select class="form-select" id="f_prio"><option value="alta">🔴 Alta</option><option value="media" selected>🟡 Média</option><option value="baixa">🟢 Baixa</option></select></div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
-      <button class="btn-save" onclick="saveLicitacao()">Salvar</button>
+      <button class="btn-save" id="btnSave" onclick="saveLicitacao()">Salvar</button>
     </div>
   </div>
 </div>
 
 <!-- DETAIL PANEL -->
-
 <div class="detail-overlay" id="detailOverlay" onclick="closeDetail()"></div>
 <div class="detail-panel" id="detailPanel">
   <button class="detail-close" onclick="closeDetail()">✕</button>
@@ -1158,84 +377,108 @@ transition: all 0.2s;
 </div>
 
 <script>
+// ===================== SUPABASE =====================
+const SUPABASE_URL = 'https://nosgtejjukzdnsgxmukn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vc2d0ZWpqdWt6ZG5zZ3htdWtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzgwMjIsImV4cCI6MjA5MDIxNDAyMn0.ahpXiMYuuQqnEfc-f8DJ3NsbMujTcGT503AG-BUdPYw';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 // ===================== STATE =====================
-let licitacoes = JSON.parse(localStorage.getItem('licitacoes') || '[]');
-let notificacoes = JSON.parse(localStorage.getItem('notificacoes') || '[]');
+let licitacoes = [];
+let notificacoes = JSON.parse(localStorage.getItem('lp_notifs') || '[]');
 let editingId = null;
 let sortField = 'prio';
 let sortDir = 1;
 let currentDetailId = null;
 
-// ===================== INIT =====================
-// Seed data se vazio
-if (licitacoes.length === 0) {
-  licitacoes = [
-    {
-      id: 1, edital: 'PE 042/2025', orgao: 'Prefeitura de Anápolis',
-      cidade: 'Anápolis - GO', objeto: 'Coleta de resíduos sólidos domiciliares',
-      plataforma: 'ComprasNet', valorOrgao: 850000, meuValor: 798000,
-      fase: 'Lances', status: 'andamento', rank: 2, totalPartic: 7,
-      data: '2025-08-15', prazoRecurso: null, prio: 'alta',
-      concorrentes: [
-        { nome: 'Limpex Ltda', valor: 780000, status: 'classificado' },
-        { nome: 'MINHA EMPRESA', valor: 798000, status: 'classificado', eu: true },
-        { nome: 'EcoClean S.A.', valor: 812000, status: 'classificado' },
-        { nome: 'Serv. Ambiente', valor: 820000, status: 'desclassificado', motivo: 'Doc. irregular' },
-      ],
-      mensagens: [
-        { time: '14:32', texto: 'Sessão aberta. Aguardando propostas.' },
-        { time: '14:45', texto: 'Fase de lances iniciada.' },
-        { time: '15:10', texto: 'Empresa Serv. Ambiente desclassificada por documentação irregular.' },
-      ]
-    },
-    {
-      id: 2, edital: 'TP 008/2025', orgao: 'Câmara de Goiânia',
-      cidade: 'Goiânia - GO', objeto: 'Fornecimento de material de escritório',
-      plataforma: 'BLL', valorOrgao: 120000, meuValor: 109500,
-      fase: 'Homologação', status: 'homologacao', rank: 1, totalPartic: 12,
-      data: '2025-08-10', prazoRecurso: 2, prio: 'alta',
-      concorrentes: [
-        { nome: 'MINHA EMPRESA', valor: 109500, status: 'classificado', eu: true },
-        { nome: 'PaperOff Ltda', valor: 112000, status: 'classificado' },
-        { nome: 'SuprArt', valor: 118000, status: 'classificado' },
-      ],
-      mensagens: [
-        { time: '10:00', texto: 'Lances encerrados. Minha empresa ficou em 1º lugar.' },
-        { time: '10:30', texto: 'Processo encaminhado para homologação.' },
-      ]
-    },
-    {
-      id: 3, edital: 'CC 015/2025', orgao: 'Secretaria Saúde - GO',
-      cidade: 'Goiânia - GO', objeto: 'Manutenção predial UBS',
-      plataforma: 'Compras Públicas', valorOrgao: 450000, meuValor: 432000,
-      fase: 'Encerrado', status: 'perdi', rank: 5, totalPartic: 9,
-      data: '2025-07-28', prazoRecurso: 0, prio: 'baixa',
-      concorrentes: [
-        { nome: 'ConstrutOK', valor: 398000, status: 'classificado' },
-        { nome: 'ReformaFácil', valor: 410000, status: 'classificado' },
-        { nome: 'ManutençãoPro', valor: 418000, status: 'classificado' },
-        { nome: 'TechBuild', valor: 425000, status: 'classificado' },
-        { nome: 'MINHA EMPRESA', valor: 432000, status: 'classificado', eu: true },
-      ],
-      mensagens: [
-        { time: '09:15', texto: 'Resultado homologado. 1º lugar: ConstrutOK com R$ 398.000.' },
-      ]
-    },
-  ];
-  save();
-  addNotif('Nova atualização', 'PE 042/2025 — Empresa desclassificada', 'urgente');
-  addNotif('Prazo de recurso', 'TP 008/2025 — 2 dias para recorrer!', 'warn');
-  addNotif('Posição atualizada', 'CC 015/2025 — Você ficou em 5º lugar', 'info');
+// ===================== TOAST =====================
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-function save() {
-  localStorage.setItem('licitacoes', JSON.stringify(licitacoes));
+// ===================== SYNC UI =====================
+function setSyncState(state) {
+  const dot = document.getElementById('syncDot');
+  const txt = document.getElementById('syncText');
+  dot.className = 'sync-dot' + (state === 'syncing' ? ' syncing' : state === 'error' ? ' error' : '');
+  txt.textContent = state === 'syncing' ? 'Salvando...' : state === 'error' ? 'Erro' : 'Conectado';
 }
 
-function addNotif(titulo, desc, tipo) {
-  notificacoes.unshift({ titulo, desc, tipo, time: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}) });
-  localStorage.setItem('notificacoes', JSON.stringify(notificacoes));
-  updateNotifBadge();
+// ===================== LOAD =====================
+async function loadData() {
+  try {
+    const { data, error } = await sb.from('licitacoes').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    licitacoes = data.map(row => ({
+      id: row.id,
+      edital: row.edital,
+      orgao: row.orgao,
+      empresa: row.empresa,
+      cidade: row.cidade,
+      objeto: row.objeto,
+      plataforma: row.plataforma,
+      valorOrgao: row.valor_orgao,
+      meuValor: row.meu_valor,
+      fase: row.fase,
+      status: row.status,
+      rank: row.rank,
+      totalPartic: row.total_partic,
+      data: row.data_sessao,
+      prazoRecurso: row.prazo_recurso,
+      prio: row.prio,
+      concorrentes: row.concorrentes || [],
+      mensagens: row.mensagens || [],
+    }));
+    document.getElementById('loadingOverlay').style.display = 'none';
+    renderTable();
+  } catch (e) {
+    document.getElementById('loadingOverlay').innerHTML = '<div style="color:var(--danger);font-size:14px;text-align:center;padding:20px">Erro ao conectar ao banco.<br>Verifique sua conexão e recarregue a página.</div>';
+    setSyncState('error');
+  }
+}
+
+// ===================== SAVE TO SUPABASE =====================
+async function saveToSupabase(data, id = null) {
+  setSyncState('syncing');
+  const row = {
+    edital: data.edital,
+    orgao: data.orgao,
+    empresa: data.empresa,
+    cidade: data.cidade,
+    objeto: data.objeto,
+    plataforma: data.plataforma,
+    valor_orgao: data.valorOrgao,
+    meu_valor: data.meuValor,
+    fase: data.fase,
+    status: data.status,
+    rank: data.rank,
+    total_partic: data.totalPartic,
+    data_sessao: data.data || null,
+    prazo_recurso: data.prazoRecurso,
+    prio: data.prio,
+    concorrentes: data.concorrentes || [],
+    mensagens: data.mensagens || [],
+  };
+  let error;
+  if (id) {
+    ({ error } = await sb.from('licitacoes').update(row).eq('id', id));
+  } else {
+    ({ error } = await sb.from('licitacoes').insert(row));
+  }
+  if (error) { setSyncState('error'); showToast('Erro ao salvar: ' + error.message, 'error'); return false; }
+  setSyncState('ok');
+  return true;
+}
+
+async function deleteFromSupabase(id) {
+  setSyncState('syncing');
+  const { error } = await sb.from('licitacoes').delete().eq('id', id);
+  if (error) { setSyncState('error'); showToast('Erro ao excluir', 'error'); return false; }
+  setSyncState('ok');
+  return true;
 }
 
 // ===================== RENDER TABLE =====================
@@ -1244,88 +487,69 @@ function renderTable() {
   const fStatus = document.getElementById('filterStatus').value;
   const fPrio = document.getElementById('filterPrio').value;
   const fPlat = document.getElementById('filterPlat').value;
+  const fEmpresa = document.getElementById('filterEmpresa').value;
 
   let data = licitacoes.filter(l => {
-    const matchSearch = !search ||
-      l.edital.toLowerCase().includes(search) ||
-      l.orgao.toLowerCase().includes(search) ||
-      l.cidade.toLowerCase().includes(search) ||
-      l.objeto.toLowerCase().includes(search);
+    const matchSearch = !search || (l.edital||'').toLowerCase().includes(search) || (l.orgao||'').toLowerCase().includes(search) || (l.cidade||'').toLowerCase().includes(search) || (l.objeto||'').toLowerCase().includes(search);
     const matchStatus = !fStatus || l.status === fStatus;
     const matchPrio = !fPrio || l.prio === fPrio;
     const matchPlat = !fPlat || l.plataforma === fPlat;
-    return matchSearch && matchStatus && matchPrio && matchPlat;
+    const matchEmpresa = !fEmpresa || l.empresa === fEmpresa;
+    return matchSearch && matchStatus && matchPrio && matchPlat && matchEmpresa;
   });
 
-  // Sort
+  const prioOrder = { alta: 0, media: 1, baixa: 2 };
   data.sort((a, b) => {
-    const prioOrder = { alta: 0, media: 1, baixa: 2 };
     if (sortField === 'prio') return (prioOrder[a.prio] - prioOrder[b.prio]) * sortDir;
-    if (sortField === 'rank') return ((a.rank || 99) - (b.rank || 99)) * sortDir;
-    if (sortField === 'valorOrgao') return ((a.valorOrgao || 0) - (b.valorOrgao || 0)) * sortDir;
-    if (sortField === 'meuValor') return ((a.meuValor || 0) - (b.meuValor || 0)) * sortDir;
-    if (sortField === 'data') return (a.data || '').localeCompare(b.data || '') * sortDir;
-    const va = (a[sortField] || '').toString().toLowerCase();
-    const vb = (b[sortField] || '').toString().toLowerCase();
-    return va.localeCompare(vb) * sortDir;
+    if (sortField === 'rank') return ((a.rank||99) - (b.rank||99)) * sortDir;
+    if (sortField === 'valor_orgao') return ((a.valorOrgao||0) - (b.valorOrgao||0)) * sortDir;
+    if (sortField === 'meu_valor') return ((a.meuValor||0) - (b.meuValor||0)) * sortDir;
+    if (sortField === 'data_sessao') return ((a.data||'') > (b.data||'') ? 1 : -1) * sortDir;
+    return ((a[sortField]||'').toString().toLowerCase() > (b[sortField]||'').toString().toLowerCase() ? 1 : -1) * sortDir;
   });
 
   updateStats();
-
   const tbody = document.getElementById('tableBody');
   const empty = document.getElementById('emptyState');
-  const count = document.getElementById('tableCount');
+  document.getElementById('tableCount').textContent = data.length + ' registro' + (data.length !== 1 ? 's' : '');
 
-  count.textContent = `${data.length} registro${data.length !== 1 ? 's' : ''}`;
-
-  if (data.length === 0) {
-    tbody.innerHTML = '';
-    empty.style.display = 'block';
-    return;
-  }
-
+  if (data.length === 0) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
+
+  const statusLabel = { andamento: 'Em Andamento', homologacao: 'Aguardando Homol.', ganhei: 'Ganhei', perdi: 'Perdi', recurso: 'Recurso' };
+  const prioLabel = { alta: '🔴 Alta', media: '🟡 Média', baixa: '🟢 Baixa' };
+  const prioCls = { alta: 'prio-alta', media: 'prio-media', baixa: 'prio-baixa' };
 
   tbody.innerHTML = data.map(l => {
     const rankClass = l.rank === 1 ? 'rank-1' : l.rank === 2 ? 'rank-2' : l.rank === 3 ? 'rank-3' : 'rank-other';
-    const statusLabel = { andamento: 'Em Andamento', homologacao: 'Aguardando Homol.', ganhei: 'Ganhei', perdi: 'Perdi', recurso: 'Recurso' };
-    const prioLabel = { alta: '🔴 Alta', media: '🟡 Média', baixa: '🟢 Baixa' };
-    const prioCls = { alta: 'prio-alta', media: 'prio-media', baixa: 'prio-baixa' };
-    
     const margem = l.meuValor && l.valorOrgao ? (((l.meuValor - l.valorOrgao) / l.valorOrgao) * 100).toFixed(1) : null;
-    const margemHtml = margem ? `<span class="td-margem ${parseFloat(margem) < 0 ? 'positiva' : 'negativa'}">${margem > 0 ? '+' : ''}${margem}%</span>` : '<span class="td-margem" style="color:var(--text3)">—</span>';
-
+    const margemHtml = margem ? '<span class="td-margem ' + (parseFloat(margem) < 0 ? 'positiva' : 'negativa') + '">' + (margem > 0 ? '+' : '') + margem + '%</span>' : '<span class="td-margem" style="color:var(--text3)">—</span>';
     let prazoHtml = '—';
     if (l.prazoRecurso !== null && l.prazoRecurso !== undefined && l.prazoRecurso !== '') {
       const p = parseInt(l.prazoRecurso);
-      const cls = p <= 0 ? 'prazo-danger' : p <= 2 ? 'prazo-warn' : 'prazo-ok';
-      prazoHtml = `<span class="${cls}">${p <= 0 ? 'Vencido' : p + ' dias'}</span>`;
+      prazoHtml = '<span class="' + (p <= 0 ? 'prazo-danger' : p <= 2 ? 'prazo-warn' : 'prazo-ok') + '">' + (p <= 0 ? 'Vencido' : p + ' dias') + '</span>';
     }
-
-    const urgente = l.prio === 'alta' ? 'urgente' : '';
-
-    return `<tr class="${urgente}" onclick="openDetail(${l.id})">
-      <td><span class="prio-badge ${prioCls[l.prio]}">${prioLabel[l.prio]}</span></td>
-      <td><div class="td-edital">${l.edital}</div></td>
-      <td><div class="td-orgao">${l.orgao}</div></td>
-      <td><div class="td-cidade">${l.cidade}</div></td>
-      <td><div class="td-objeto">${l.objeto}</div></td>
-      <td><span class="td-plataforma">${l.plataforma}</span></td>
-      <td><span class="fase-tag">${l.fase || '—'}</span></td>
-      <td><span class="status-badge status-${l.status}">${statusLabel[l.status]}</span></td>
-      <td><div class="td-valor">${l.valorOrgao ? 'R$ ' + Number(l.valorOrgao).toLocaleString('pt-BR') : '—'}</div></td>
-      <td><div class="td-meu-valor">${l.meuValor ? 'R$ ' + Number(l.meuValor).toLocaleString('pt-BR') : '—'}</div></td>
-      <td>${margemHtml}</td>
-      <td><span class="rank-badge ${rankClass}">${l.rank || '—'}</span></td>
-      <td><div class="td-data">${l.data ? new Date(l.data + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</div></td>
-      <td>${prazoHtml}</td>
-      <td onclick="event.stopPropagation()">
-        <div class="td-actions">
-          <button class="action-btn" onclick="editLicitacao(${l.id})" title="Editar">✏️</button>
-          <button class="action-btn danger" onclick="deleteLicitacao(${l.id})" title="Excluir">🗑️</button>
-        </div>
-      </td>
-    </tr>`;
+    return '<tr class="' + (l.prio === 'alta' ? 'urgente' : '') + '" onclick="openDetail(' + l.id + ')">' +
+      '<td><span class="prio-badge ' + prioCls[l.prio] + '">' + prioLabel[l.prio] + '</span></td>' +
+      '<td><span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;background:' + (l.empresa === 'BIOLIMP APOIO' ? 'rgba(0,229,160,0.1);color:var(--accent);border:1px solid rgba(0,229,160,0.25)' : 'rgba(0,153,255,0.1);color:var(--accent2);border:1px solid rgba(0,153,255,0.25)') + '">' + (l.empresa||'—') + '</span></td>' +
+      '<td><div class="td-edital">' + (l.edital||'—') + '</div></td>' +
+      '<td><div class="td-orgao">' + (l.orgao||'—') + '</div></td>' +
+      '<td><div class="td-cidade">' + (l.cidade||'—') + '</div></td>' +
+      '<td><div class="td-objeto">' + (l.objeto||'—') + '</div></td>' +
+      '<td><span class="td-plataforma">' + (l.plataforma||'—') + '</span></td>' +
+      '<td><span class="fase-tag">' + (l.fase||'—') + '</span></td>' +
+      '<td><span class="status-badge status-' + l.status + '">' + statusLabel[l.status] + '</span></td>' +
+      '<td><div class="td-valor">' + (l.valorOrgao ? 'R$ ' + Number(l.valorOrgao).toLocaleString('pt-BR') : '—') + '</div></td>' +
+      '<td><div class="td-meu-valor">' + (l.meuValor ? 'R$ ' + Number(l.meuValor).toLocaleString('pt-BR') : '—') + '</div></td>' +
+      '<td>' + margemHtml + '</td>' +
+      '<td><span class="rank-badge ' + rankClass + '">' + (l.rank||'—') + '</span></td>' +
+      '<td><div class="td-data">' + (l.data ? new Date(l.data + 'T00:00:00').toLocaleDateString('pt-BR') : '—') + '</div></td>' +
+      '<td>' + prazoHtml + '</td>' +
+      '<td onclick="event.stopPropagation()"><div class="td-actions">' +
+        '<button class="action-btn" onclick="editLicitacao(' + l.id + ')" title="Editar">✏️</button>' +
+        '<button class="action-btn danger" onclick="deleteLicitacao(' + l.id + ')" title="Excluir">🗑️</button>' +
+      '</div></td>' +
+    '</tr>';
   }).join('');
 }
 
@@ -1338,8 +562,7 @@ function updateStats() {
 }
 
 function sortBy(field) {
-  if (sortField === field) sortDir *= -1;
-  else { sortField = field; sortDir = 1; }
+  if (sortField === field) sortDir *= -1; else { sortField = field; sortDir = 1; }
   renderTable();
 }
 
@@ -1347,10 +570,10 @@ function sortBy(field) {
 function openModal(id = null) {
   editingId = id;
   document.getElementById('modalTitle').textContent = id ? 'Editar Licitação' : 'Nova Licitação';
-
   if (id) {
     const l = licitacoes.find(x => x.id === id);
     document.getElementById('f_edital').value = l.edital || '';
+    document.getElementById('f_empresa').value = l.empresa || 'BIOLIMP APOIO';
     document.getElementById('f_plataforma').value = l.plataforma || 'ComprasNet';
     document.getElementById('f_orgao').value = l.orgao || '';
     document.getElementById('f_cidade').value = l.cidade || '';
@@ -1365,36 +588,32 @@ function openModal(id = null) {
     document.getElementById('f_prazoRecurso').value = l.prazoRecurso !== null ? l.prazoRecurso : '';
     document.getElementById('f_prio').value = l.prio || 'media';
   } else {
-    ['f_edital','f_orgao','f_cidade','f_objeto','f_valorOrgao','f_meuValor','f_rank','f_totalPartic','f_data','f_prazoRecurso'].forEach(id => document.getElementById(id).value = '');
+    ['f_edital','f_orgao','f_cidade','f_objeto','f_valorOrgao','f_meuValor','f_rank','f_totalPartic','f_data','f_prazoRecurso'].forEach(i => document.getElementById(i).value = '');
+    document.getElementById('f_empresa').value = 'BIOLIMP APOIO';
     document.getElementById('f_plataforma').value = 'ComprasNet';
     document.getElementById('f_fase').value = 'Proposta';
     document.getElementById('f_status').value = 'andamento';
     document.getElementById('f_prio').value = 'media';
   }
-
   document.getElementById('modalOverlay').classList.add('open');
 }
 
-function closeModal() {
-  document.getElementById('modalOverlay').classList.remove('open');
-  editingId = null;
-}
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); editingId = null; }
+function closeModalOutside(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
 
-function closeModalOutside(e) {
-  if (e.target === document.getElementById('modalOverlay')) closeModal();
-}
-
-function saveLicitacao() {
+async function saveLicitacao() {
   const edital = document.getElementById('f_edital').value.trim();
   const orgao = document.getElementById('f_orgao').value.trim();
-  if (!edital || !orgao) { alert('Preencha ao menos o Nº do Edital e o Órgão.'); return; }
+  if (!edital || !orgao) { showToast('Preencha o Nº do Edital e o Órgão', 'error'); return; }
 
-  const prazoVal = document.getElementById('f_prazoRecurso').value;
+  const btn = document.getElementById('btnSave');
+  btn.textContent = 'Salvando...'; btn.disabled = true;
 
+  const existing = editingId ? licitacoes.find(x => x.id === editingId) : null;
   const data = {
-    edital,
+    edital, orgao,
+    empresa: document.getElementById('f_empresa').value,
     plataforma: document.getElementById('f_plataforma').value,
-    orgao,
     cidade: document.getElementById('f_cidade').value.trim(),
     objeto: document.getElementById('f_objeto').value.trim(),
     valorOrgao: parseFloat(document.getElementById('f_valorOrgao').value) || null,
@@ -1403,37 +622,33 @@ function saveLicitacao() {
     status: document.getElementById('f_status').value,
     rank: parseInt(document.getElementById('f_rank').value) || null,
     totalPartic: parseInt(document.getElementById('f_totalPartic').value) || null,
-    data: document.getElementById('f_data').value,
-    prazoRecurso: prazoVal !== '' ? parseInt(prazoVal) : null,
+    data: document.getElementById('f_data').value || null,
+    prazoRecurso: document.getElementById('f_prazoRecurso').value !== '' ? parseInt(document.getElementById('f_prazoRecurso').value) : null,
     prio: document.getElementById('f_prio').value,
+    concorrentes: existing ? existing.concorrentes : [],
+    mensagens: existing ? existing.mensagens : [],
   };
 
-  if (editingId) {
-    const idx = licitacoes.findIndex(x => x.id === editingId);
-    licitacoes[idx] = { ...licitacoes[idx], ...data };
-    addNotif('Licitação atualizada', `${data.edital} — ${data.orgao}`, 'info');
-  } else {
-    const newId = Date.now();
-    licitacoes.push({ id: newId, concorrentes: [], mensagens: [], ...data });
-    addNotif('Nova licitação cadastrada', `${data.edital} — ${data.orgao}`, 'info');
-  }
+  const ok = await saveToSupabase(data, editingId);
+  btn.textContent = 'Salvar'; btn.disabled = false;
+  if (!ok) return;
 
-  save();
+  showToast(editingId ? 'Licitação atualizada!' : 'Licitação cadastrada!');
+  addNotif(editingId ? 'Licitação atualizada' : 'Nova licitação cadastrada', edital + ' — ' + orgao, 'info');
   closeModal();
-  renderTable();
-  if (currentDetailId === editingId) openDetail(editingId);
+  await loadData();
+  if (currentDetailId && editingId) openDetail(currentDetailId);
 }
 
-function editLicitacao(id) {
-  openModal(id);
-}
+function editLicitacao(id) { openModal(id); }
 
-function deleteLicitacao(id) {
+async function deleteLicitacao(id) {
   if (!confirm('Excluir esta licitação?')) return;
-  licitacoes = licitacoes.filter(x => x.id !== id);
-  save();
-  renderTable();
+  const ok = await deleteFromSupabase(id);
+  if (!ok) return;
+  showToast('Licitação excluída');
   if (currentDetailId === id) closeDetail();
+  await loadData();
 }
 
 // ===================== DETAIL PANEL =====================
@@ -1445,93 +660,50 @@ function openDetail(id) {
   const statusLabel = { andamento: 'Em Andamento', homologacao: 'Aguardando Homologação', ganhei: 'Ganhei', perdi: 'Perdi', recurso: 'Recurso' };
   const margem = l.meuValor && l.valorOrgao ? (((l.meuValor - l.valorOrgao) / l.valorOrgao) * 100).toFixed(1) : null;
 
-  let concHtml = '';
-  if (l.concorrentes && l.concorrentes.length > 0) {
-    concHtml = l.concorrentes.map((c, i) => {
-      const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-other';
-      return `<div class="concorrente-row ${c.eu ? 'conc-eu' : ''}">
-        <div class="conc-rank rank-badge ${rankClass}">${i+1}</div>
-        <div class="conc-info">
-          <div class="conc-nome">${c.eu ? '⭐ ' : ''}${c.nome}</div>
-          <div class="conc-status">${c.status === 'desclassificado' ? '❌ Desclassificado' + (c.motivo ? ': ' + c.motivo : '') : '✅ Classificado'}</div>
-        </div>
-        <div class="conc-valor">${c.valor ? 'R$ ' + Number(c.valor).toLocaleString('pt-BR') : '—'}</div>
-      </div>`;
-    }).join('');
-  } else {
-    concHtml = '<div style="color:var(--text3);font-size:12px;padding:12px 0">Nenhum concorrente cadastrado</div>';
-  }
+  let concHtml = l.concorrentes && l.concorrentes.length > 0
+    ? l.concorrentes.map((c, i) => {
+        const rc = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-other';
+        return '<div class="concorrente-row ' + (c.eu ? 'conc-eu' : '') + '">' +
+          '<div class="conc-rank rank-badge ' + rc + '">' + (i+1) + '</div>' +
+          '<div class="conc-info"><div class="conc-nome">' + (c.eu ? '⭐ ' : '') + c.nome + '</div>' +
+          '<div class="conc-status">' + (c.status === 'desclassificado' ? '❌ Desclassificado' + (c.motivo ? ': ' + c.motivo : '') : '✅ Classificado') + '</div></div>' +
+          '<div class="conc-valor">' + (c.valor ? 'R$ ' + Number(c.valor).toLocaleString('pt-BR') : '—') + '</div></div>';
+      }).join('')
+    : '<div style="color:var(--text3);font-size:12px;padding:12px 0">Nenhum concorrente cadastrado</div>';
 
-  let msgHtml = '';
-  if (l.mensagens && l.mensagens.length > 0) {
-    msgHtml = [...l.mensagens].reverse().map(m => `
-      <div class="msg-item">
-        <div class="msg-time">🕐 ${m.time}</div>
-        <div class="msg-text">${m.texto}</div>
-      </div>
-    `).join('');
-  } else {
-    msgHtml = '<div style="color:var(--text3);font-size:12px;padding:12px 0">Nenhuma mensagem registrada</div>';
-  }
+  let msgHtml = l.mensagens && l.mensagens.length > 0
+    ? [...l.mensagens].reverse().map(m => '<div class="msg-item"><div class="msg-time">🕐 ' + m.time + '</div><div class="msg-text">' + m.texto + '</div></div>').join('')
+    : '<div style="color:var(--text3);font-size:12px;padding:12px 0">Nenhuma mensagem registrada</div>';
 
-  document.getElementById('detailContent').innerHTML = `
-    <div style="margin-bottom:20px;margin-top:8px">
-      <div class="detail-edital">${l.plataforma} · ${l.edital}</div>
-      <div class="detail-orgao">${l.orgao}</div>
-      <div class="detail-objeto">${l.objeto || '—'}</div>
-      <span class="status-badge status-${l.status}">${statusLabel[l.status]}</span>
-    </div>
-
-    <div class="detail-section-title">Dados Financeiros</div>
-    <div class="detail-grid">
-      <div class="detail-item">
-        <div class="detail-item-label">Valor Órgão</div>
-        <div class="detail-item-value" style="color:var(--text2)">${l.valorOrgao ? 'R$ ' + Number(l.valorOrgao).toLocaleString('pt-BR') : '—'}</div>
-      </div>
-      <div class="detail-item">
-        <div class="detail-item-label">Meu Lance</div>
-        <div class="detail-item-value" style="color:var(--accent)">${l.meuValor ? 'R$ ' + Number(l.meuValor).toLocaleString('pt-BR') : '—'}</div>
-      </div>
-      <div class="detail-item">
-        <div class="detail-item-label">Margem</div>
-        <div class="detail-item-value" style="color:${margem && parseFloat(margem) < 0 ? 'var(--success)' : 'var(--danger)'}">${margem ? (margem > 0 ? '+' : '') + margem + '%' : '—'}</div>
-      </div>
-      <div class="detail-item">
-        <div class="detail-item-label">Minha Posição</div>
-        <div class="detail-item-value" style="color:${l.rank === 1 ? 'var(--success)' : 'var(--text)'}">${l.rank ? l.rank + 'º de ' + (l.totalPartic || '?') : '—'}</div>
-      </div>
-    </div>
-
-    <div class="detail-section-title">Informações</div>
-    <div class="detail-grid">
-      <div class="detail-item">
-        <div class="detail-item-label">Cidade</div>
-        <div class="detail-item-value" style="font-family:var(--font);font-size:13px">${l.cidade || '—'}</div>
-      </div>
-      <div class="detail-item">
-        <div class="detail-item-label">Fase</div>
-        <div class="detail-item-value" style="font-family:var(--font);font-size:13px">${l.fase || '—'}</div>
-      </div>
-      <div class="detail-item">
-        <div class="detail-item-label">Data Sessão</div>
-        <div class="detail-item-value">${l.data ? new Date(l.data + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</div>
-      </div>
-      <div class="detail-item">
-        <div class="detail-item-label">Prazo Recurso</div>
-        <div class="detail-item-value" style="color:${l.prazoRecurso <= 2 ? 'var(--warn)' : 'var(--text)'}">${l.prazoRecurso !== null && l.prazoRecurso !== undefined ? l.prazoRecurso + ' dias' : '—'}</div>
-      </div>
-    </div>
-
-    <div class="detail-section-title">Ranking de Concorrentes</div>
-    ${concHtml}
-    <button class="btn-add-conc" onclick="addConcorrente(${l.id})">+ Adicionar concorrente</button>
-
-    <div class="detail-section-title">Mensagens do Pregoeiro</div>
-    ${msgHtml}
-    <button class="btn-add-msg" onclick="addMensagem(${l.id})">+ Registrar mensagem</button>
-
-    <button class="detail-edit-btn" onclick="editLicitacao(${l.id})">✏️ Editar esta licitação</button>
-  `;
+  document.getElementById('detailContent').innerHTML =
+    '<div style="margin-bottom:20px;margin-top:8px">' +
+      '<div class="detail-edital">' + (l.plataforma||'') + ' · ' + (l.edital||'') + '</div>' +
+      '<div class="detail-orgao">' + (l.orgao||'') + '</div>' +
+      '<div class="detail-objeto">' + (l.objeto||'—') + '</div>' +
+      '<span class="status-badge status-' + l.status + '">' + statusLabel[l.status] + '</span>' +
+    '</div>' +
+    '<div class="detail-section-title">Dados Financeiros</div>' +
+    '<div class="detail-grid">' +
+      '<div class="detail-item"><div class="detail-item-label">Valor Órgão</div><div class="detail-item-value" style="color:var(--text2)">' + (l.valorOrgao ? 'R$ ' + Number(l.valorOrgao).toLocaleString('pt-BR') : '—') + '</div></div>' +
+      '<div class="detail-item"><div class="detail-item-label">Meu Lance</div><div class="detail-item-value" style="color:var(--accent)">' + (l.meuValor ? 'R$ ' + Number(l.meuValor).toLocaleString('pt-BR') : '—') + '</div></div>' +
+      '<div class="detail-item"><div class="detail-item-label">Margem</div><div class="detail-item-value" style="color:' + (margem && parseFloat(margem) < 0 ? 'var(--success)' : 'var(--danger)') + '">' + (margem ? (margem > 0 ? '+' : '') + margem + '%' : '—') + '</div></div>' +
+      '<div class="detail-item"><div class="detail-item-label">Minha Posição</div><div class="detail-item-value" style="color:' + (l.rank === 1 ? 'var(--success)' : 'var(--text)') + '">' + (l.rank ? l.rank + 'º de ' + (l.totalPartic||'?') : '—') + '</div></div>' +
+    '</div>' +
+    '<div class="detail-section-title">Informações</div>' +
+    '<div class="detail-grid">' +
+      '<div class="detail-item"><div class="detail-item-label">Empresa</div><div class="detail-item-value" style="font-family:var(--font);font-size:13px;color:' + (l.empresa === 'BIOLIMP APOIO' ? 'var(--accent)' : 'var(--accent2)') + '">' + (l.empresa||'—') + '</div></div>' +
+      '<div class="detail-item"><div class="detail-item-label">Cidade</div><div class="detail-item-value" style="font-family:var(--font);font-size:13px">' + (l.cidade||'—') + '</div></div>' +
+      '<div class="detail-item"><div class="detail-item-label">Fase</div><div class="detail-item-value" style="font-family:var(--font);font-size:13px">' + (l.fase||'—') + '</div></div>' +
+      '<div class="detail-item"><div class="detail-item-label">Data Sessão</div><div class="detail-item-value">' + (l.data ? new Date(l.data + 'T00:00:00').toLocaleDateString('pt-BR') : '—') + '</div></div>' +
+      '<div class="detail-item"><div class="detail-item-label">Prazo Recurso</div><div class="detail-item-value" style="color:' + (l.prazoRecurso <= 2 ? 'var(--warn)' : 'var(--text)') + '">' + (l.prazoRecurso !== null && l.prazoRecurso !== undefined ? l.prazoRecurso + ' dias' : '—') + '</div></div>' +
+    '</div>' +
+    '<div class="detail-section-title">Ranking de Concorrentes</div>' +
+    concHtml +
+    '<button class="btn-add-conc" onclick="addConcorrente(' + l.id + ')">+ Adicionar concorrente</button>' +
+    '<div class="detail-section-title">Mensagens do Pregoeiro</div>' +
+    msgHtml +
+    '<button class="btn-add-msg" onclick="addMensagem(' + l.id + ')">+ Registrar mensagem</button>' +
+    '<button class="detail-edit-btn" onclick="editLicitacao(' + l.id + ')">✏️ Editar esta licitação</button>';
 
   document.getElementById('detailOverlay').classList.add('open');
   document.getElementById('detailPanel').classList.add('open');
@@ -1543,40 +715,51 @@ function closeDetail() {
   currentDetailId = null;
 }
 
-function addConcorrente(id) {
+async function addConcorrente(id) {
   const nome = prompt('Nome da empresa concorrente:');
   if (!nome) return;
   const valorStr = prompt('Valor do lance (somente números, ex: 98500):');
   const valor = parseFloat(valorStr) || null;
-  const status = confirm('Empresa classificada? (OK = Sim, Cancelar = Desclassificada)') ? 'classificado' : 'desclassificado';
-  let motivo = '';
-  if (status === 'desclassificado') motivo = prompt('Motivo da desclassificação:') || '';
+  const classificado = confirm('Empresa classificada? (OK = Sim, Cancelar = Desclassificada)');
+  const status = classificado ? 'classificado' : 'desclassificado';
+  const motivo = !classificado ? (prompt('Motivo da desclassificação:') || '') : '';
 
   const l = licitacoes.find(x => x.id === id);
-  if (!l.concorrentes) l.concorrentes = [];
-  l.concorrentes.push({ nome, valor, status, motivo });
-  l.concorrentes.sort((a, b) => (a.valor || Infinity) - (b.valor || Infinity));
+  const concorrentes = [...(l.concorrentes || []), { nome, valor, status, motivo }];
+  concorrentes.sort((a, b) => (a.valor||Infinity) - (b.valor||Infinity));
 
-  save();
-  addNotif('Concorrente adicionado', `${nome} na ${l.edital}`, 'info');
+  const ok = await saveToSupabase({ ...l, concorrentes }, id);
+  if (!ok) return;
+  addNotif('Concorrente adicionado', nome + ' na ' + l.edital, 'info');
+  showToast('Concorrente adicionado!');
+  await loadData();
   openDetail(id);
-  renderTable();
 }
 
-function addMensagem(id) {
+async function addMensagem(id) {
   const texto = prompt('Digite a mensagem do pregoeiro:');
   if (!texto) return;
   const l = licitacoes.find(x => x.id === id);
-  if (!l.mensagens) l.mensagens = [];
   const now = new Date();
   const time = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  l.mensagens.push({ time, texto });
-  save();
-  addNotif('Nova mensagem do pregoeiro', `${l.edital} — "${texto.substring(0, 40)}..."`, 'urgente');
+  const mensagens = [...(l.mensagens || []), { time, texto }];
+
+  const ok = await saveToSupabase({ ...l, mensagens }, id);
+  if (!ok) return;
+  addNotif('Nova mensagem do pregoeiro', l.edital + ' — "' + texto.substring(0,40) + '..."', 'urgente');
+  showToast('Mensagem registrada!');
+  await loadData();
   openDetail(id);
 }
 
 // ===================== NOTIFICAÇÕES =====================
+function addNotif(titulo, desc, tipo) {
+  const time = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+  notificacoes.unshift({ titulo, desc, tipo, time });
+  localStorage.setItem('lp_notifs', JSON.stringify(notificacoes));
+  updateNotifBadge();
+}
+
 function toggleNotif() {
   const panel = document.getElementById('notifPanel');
   panel.classList.toggle('open');
@@ -1586,29 +769,18 @@ function toggleNotif() {
 document.addEventListener('click', function(e) {
   const panel = document.getElementById('notifPanel');
   const btn = document.querySelector('.notif-btn');
-  if (panel.classList.contains('open') && !panel.contains(e.target) && !btn.contains(e.target)) {
-    panel.classList.remove('open');
-  }
+  if (panel.classList.contains('open') && !panel.contains(e.target) && !btn.contains(e.target)) panel.classList.remove('open');
 });
 
 function renderNotifs() {
   const list = document.getElementById('notifList');
-  if (notificacoes.length === 0) {
-    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">Nenhuma notificação</div>';
-    return;
-  }
-  list.innerHTML = notificacoes.slice(0, 8).map(n => `
-    <div class="notif-item">
-      <div class="notif-item-row">
-        <div class="notif-dot" style="background:${n.tipo === 'urgente' ? 'var(--danger)' : n.tipo === 'warn' ? 'var(--warn)' : 'var(--accent)'}"></div>
-        <div>
-          <div class="notif-item-title">${n.titulo}</div>
-          <div class="notif-item-desc">${n.desc}</div>
-          <div class="notif-item-time">${n.time}</div>
-        </div>
-      </div>
-    </div>
-  `).join('');
+  if (notificacoes.length === 0) { list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">Nenhuma notificação</div>'; return; }
+  list.innerHTML = notificacoes.slice(0,8).map(n =>
+    '<div class="notif-item"><div class="notif-item-row">' +
+    '<div class="notif-dot" style="background:' + (n.tipo==='urgente'?'var(--danger)':n.tipo==='warn'?'var(--warn)':'var(--accent)') + '"></div>' +
+    '<div><div class="notif-item-title">' + n.titulo + '</div><div class="notif-item-desc">' + n.desc + '</div><div class="notif-item-time">' + n.time + '</div></div>' +
+    '</div></div>'
+  ).join('');
 }
 
 function updateNotifBadge() {
@@ -1619,16 +791,14 @@ function updateNotifBadge() {
 
 function clearNotifs() {
   notificacoes = [];
-  localStorage.setItem('notificacoes', JSON.stringify(notificacoes));
+  localStorage.setItem('lp_notifs', JSON.stringify(notificacoes));
   updateNotifBadge();
   renderNotifs();
 }
 
 // ===================== START =====================
 updateNotifBadge();
-renderNotifs();
-renderTable();
+loadData();
 </script>
-
 </body>
 </html>
